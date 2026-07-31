@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blind Listening Test</title>
+<style>
+  :root{
+    --ink:#141210; --panel:#1E1B18; --panelHi:#252119; --rule:#332D27;
+    --bone:#EDE6DA; --muted:#8A817A; --brass:#C8963E; --red:#E50914;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--ink)}
+  body{padding:36px 16px 60px}
+  .wrap{max-width:620px;margin:0 auto}
+  .panel{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:28px 24px 32px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .eyebrow.red{color:var(--red)} .eyebrow.brass{color:var(--brass)}
+  h1{font-family:var(--serif);color:var(--bone);font-size:31px;line-height:1.15;margin:14px 0 18px;font-weight:400}
+  h2{font-family:var(--serif);color:var(--bone);font-size:26px;line-height:1.2;margin:20px 0 4px;font-weight:400}
+  p{font-family:var(--serif);color:var(--muted);font-size:16px;line-height:1.65;margin:0 0 14px}
+  .credit{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em;margin-bottom:20px}
+  .meter{display:flex;gap:4px;margin-top:10px}
+  .meter i{height:3px;flex:1;background:var(--rule)}
+  .meter i.done{background:var(--brass)} .meter i.now{background:var(--bone)}
+  .clip{border-top:1px solid var(--rule);padding:16px 0 6px}
+  .clipTop{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .badge{width:34px;height:34px;flex:0 0 34px;border-radius:3px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:14px;font-weight:600;color:var(--bone);border:1px solid var(--rule)}
+  .badge.scored{color:var(--brass);border-color:var(--brass)}
+  audio{flex:1;min-width:0;height:38px}
+  .scale{display:flex;flex-wrap:wrap;gap:5px;padding-left:46px}
+  .scale button{min-width:34px;height:34px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:13px;
+    background:transparent;color:var(--muted);border:1px solid var(--rule);transition:background .12s,color .12s}
+  .scale button:hover{color:var(--bone)}
+  .scale button.on{background:var(--red);color:#fff;border-color:var(--red)}
+  .fail{font-family:var(--mono);font-size:11px;color:var(--red);padding-left:46px;margin:4px 0 8px}
+  .statusRow{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--rule);padding-top:14px}
+  .count{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
+  .count.full{color:var(--brass)}
+  .linkbtn{font-family:var(--mono);font-size:11px;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;letter-spacing:.08em}
+  .divider{border-top:1px solid var(--rule);margin:24px 0 18px}
+  .ask{font-family:var(--serif);color:var(--bone);font-size:16px;margin:0 0 14px}
+  .guess{display:flex;flex-wrap:wrap;gap:8px}
+  .guess button{min-width:52px;padding:10px 14px;border-radius:3px;font-family:var(--mono);font-size:14px;cursor:pointer;
+    background:transparent;color:var(--bone);border:1px solid var(--rule)}
+  .guess button.unsure{font-size:12px;letter-spacing:.06em;color:var(--muted)}
+  .guess button.on{background:var(--bone);color:var(--ink);border-color:var(--bone)}
+  .nav{display:flex;gap:12px;margin-top:30px}
+  .btn{padding:14px 20px;border-radius:3px;font-family:var(--mono);font-size:13px;letter-spacing:.1em;cursor:pointer;border:none}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--rule)}
+  .btn.go{flex:1;background:var(--red);color:#fff}
+  .btn.go[disabled]{background:var(--panelHi);color:var(--muted);cursor:default}
+  input[type=text],input[type=email]{width:100%;padding:12px;background:var(--ink);border:1px solid var(--rule);
+    color:var(--bone);font-family:var(--mono);font-size:14px;border-radius:3px;margin-bottom:12px}
+  input::placeholder{color:var(--muted)}
+  .foot{font-family:var(--mono);font-size:10px;color:var(--rule);text-align:center;margin-top:18px;letter-spacing:.14em}
+  button:focus-visible,input:focus-visible,audio:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:420px){ .scale{padding-left:0} .fail{padding-left:0} h1{font-size:26px} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="panel" id="app"></div>
+  <div class="foot">JG BEATSLAB &middot; SIGNAL IN. SIGNAL OUT.</div>
+</div>
+
+<iframe name="sink" id="sink" style="display:none" title="submit target"></iframe>
+<form id="poster" method="POST" target="sink"
+      action="https://script.google.com/macros/s/AKfycbwaPAW5_8si6fHQpi392EVm0HvEibRV5fMrDYS6fD_MOfI609lOngY7DsBQUYnVA083/exec"
+      style="display:none">
+  <input type="hidden" name="payload" id="payload">
+</form>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---- config. filenames only. no treatment names anywhere in this file ---- */
+  var SONGS = [
+    { id:"fnf",  title:"Back Road Bonfire",       artist:"Friday Night Fire", genre:"Modern country rock" },
+    { id:"t112", title:"Low Light Frequency",     artist:"The 112 Groove",    genre:"Amapiano" },
+    { id:"mcm",  title:"When the Grid Goes Down", artist:"Mud Creek Mafia",   genre:"Hick-hop / hard rock" },
+    { id:"ad",   title:"Black Box Heart",         artist:"Anchor Down",       genre:"Modern hard rock / metal" }
+  ];
+  var SLOTS = ["a","b","c","d"];
+  var LETTERS = ["A","B","C","D"];
+
+  var app = document.getElementById("app");
+  var state = { step:"intro", songIdx:0, name:"", email:"", sent:false };
+  var answers = {}, orders = {};
+
+  SONGS.forEach(function(s){
+    answers[s.id] = { scores:{}, guess:null };
+    orders[s.id] = shuffle(SLOTS.slice());
+  });
+
+  function shuffle(a){
+    for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+  function el(html){ var d=document.createElement("div"); d.innerHTML=html.trim(); return d.firstChild; }
+  function postHeight(){
+    try { parent.postMessage({ type:"blt-height", h: document.documentElement.scrollHeight }, "*"); } catch(e){}
+  }
+
+  /* ---------------- screens ---------------- */
+
+  function renderIntro(){
+    app.innerHTML =
+      '<div class="eyebrow red">Blind listening test</div>' +
+      '<h1>Four songs. Four masters each. No labels.</h1>' +
+      '<p>Every version of a song started as the same raw file. One was left untouched, two went through ' +
+      'automated mastering services, one was mastered by hand. You will not be told which is which, and the ' +
+      'order changes for every listener.</p>' +
+      '<p>Score each version from 1 to 10, then say which one you think a person mastered. Headphones if you ' +
+      'have them. About fifteen minutes.</p>' +
+      '<button class="btn go" id="start" style="width:100%">START LISTENING</button>';
+    document.getElementById("start").onclick = function(){ state.step="song"; state.songIdx=0; render(); };
+  }
+
+  function renderSong(){
+    var song = SONGS[state.songIdx];
+    var a = answers[song.id];
+    var order = orders[song.id];
+
+    var meter = SONGS.map(function(_,i){
+      return '<i class="'+(i<state.songIdx?"done":i===state.songIdx?"now":"")+'"></i>';
+    }).join("");
+
+    var clips = order.map(function(slot,i){
+      var sc = a.scores[slot];
+      var scale = "";
+      for (var n=1;n<=10;n++){
+        scale += '<button data-slot="'+slot+'" data-n="'+n+'" class="'+(sc===n?"on":"")+'">'+n+'</button>';
+      }
+      return '<div class="clip">' +
+               '<div class="clipTop">' +
+                 '<div class="badge'+(sc?" scored":"")+'">'+LETTERS[i]+'</div>' +
+                 '<audio controls preload="metadata" src="'+song.id+'_'+slot+'.mp3" data-slot="'+slot+'"></audio>' +
+               '</div>' +
+               '<div class="fail" id="fail_'+slot+'" style="display:none">CLIP DID NOT LOAD</div>' +
+               '<div class="scale">'+scale+'</div>' +
+             '</div>';
+    }).join("");
+
+    var guessBtns = order.map(function(slot,i){
+      return '<button data-guess="'+slot+'" class="'+(a.guess===slot?"on":"")+'">'+LETTERS[i]+'</button>';
+    }).join("") +
+    '<button data-guess="unsure" class="unsure'+(a.guess==="unsure"?" on":"")+'">NOT SURE</button>';
+
+    var done = SLOTS.filter(function(s){ return a.scores[s]; }).length;
+    var ready = done===4 && a.guess!==null;
+
+    app.innerHTML =
+      '<div class="eyebrow">Song '+(state.songIdx+1)+' of '+SONGS.length+'</div>' +
+      '<div class="meter">'+meter+'</div>' +
+      '<h2>'+song.title+'</h2>' +
+      '<div class="credit">'+song.artist+' &middot; '+song.genre+'</div>' +
+      '<p>Same song four times, mastered four different ways. Score each one from 1 to 10 on the mastering ' +
+      'alone. 10 is release-ready as it stands. 1 is unusable. Score them independently, ties are fine.</p>' +
+      clips +
+      '<div class="statusRow">' +
+        '<div class="count'+(done===4?" full":"")+'">'+done+' / 4 SCORED</div>' +
+        (done>0 ? '<button class="linkbtn" id="clear">CLEAR SCORES</button>' : '') +
+      '</div>' +
+      '<div class="divider"></div>' +
+      '<div class="ask">Which one do you think a person mastered?</div>' +
+      '<div class="guess">'+guessBtns+'</div>' +
+      '<div class="nav">' +
+        (state.songIdx>0 ? '<button class="btn ghost" id="back">BACK</button>' : '') +
+        '<button class="btn go" id="next"'+(ready?"":" disabled")+'>' +
+          (state.songIdx===SONGS.length-1 ? "LAST STEP" : "NEXT SONG") +
+        '</button>' +
+      '</div>';
+
+    Array.prototype.forEach.call(app.querySelectorAll(".scale button"), function(b){
+      b.onclick = function(){ a.scores[b.dataset.slot] = parseInt(b.dataset.n,10); render(); };
+    });
+    Array.prototype.forEach.call(app.querySelectorAll(".guess button"), function(b){
+      b.onclick = function(){ a.guess = b.dataset.guess; render(); };
+    });
+    Array.prototype.forEach.call(app.querySelectorAll("audio"), function(au){
+      au.onerror = function(){
+        var f = document.getElementById("fail_"+au.dataset.slot);
+        if (f){ f.style.display="block"; postHeight(); }
+      };
+    });
+    var c = document.getElementById("clear");
+    if (c) c.onclick = function(){ a.scores = {}; render(); };
+    var bk = document.getElementById("back");
+    if (bk) bk.onclick = function(){ state.songIdx--; render(); window.scrollTo(0,0); };
+    document.getElementById("next").onclick = function(){
+      if (!ready) return;
+      if (state.songIdx===SONGS.length-1){ state.step="contact"; } else { state.songIdx++; }
+      render(); window.scrollTo(0,0);
+    };
+  }
+
+  function renderContact(){
+    app.innerHTML =
+      '<div class="eyebrow brass">Last step</div>' +
+      '<h2>All four songs scored.</h2>' +
+      '<p style="margin-top:14px">Leave a name and email if you want the results when they are published. ' +
+      'Both optional.</p>' +
+      '<input type="text" id="nm" placeholder="Name (optional)">' +
+      '<input type="email" id="em" placeholder="Email (optional)">' +
+      '<div class="nav">' +
+        '<button class="btn ghost" id="back2">BACK</button>' +
+        '<button class="btn go" id="send">SUBMIT SCORES</button>' +
+      '</div>';
+    document.getElementById("nm").value = state.name;
+    document.getElementById("em").value = state.email;
+    document.getElementById("back2").onclick = function(){
+      state.name = document.getElementById("nm").value;
+      state.email = document.getElementById("em").value;
+      state.step="song"; state.songIdx=SONGS.length-1; render();
+    };
+    document.getElementById("send").onclick = function(){
+      if (state.sent) return;
+      state.sent = true;
+      state.name = document.getElementById("nm").value;
+      state.email = document.getElementById("em").value;
+      this.textContent = "SENDING…";
+      this.disabled = true;
+      submit();
+    };
+  }
+
+  function renderDone(){
+    app.innerHTML =
+      '<div style="text-align:center;padding:26px 0">' +
+        '<div class="eyebrow brass">Recorded</div>' +
+        '<h2 style="margin-top:16px">Thanks for the fifteen minutes.</h2>' +
+        '<p style="max-width:380px;margin:0 auto">Your scores are in. The write-up goes out with whatever the ' +
+        'data actually says, wins beside losses.</p>' +
+      '</div>';
+  }
+
+  /* ---------------- submit ---------------- */
+
+  function submit(){
+    var payload = {
+      v: 2,
+      ts: new Date().toISOString(),
+      name: state.name.trim() || null,
+      email: state.email.trim() || null,
+      songs: answers
+    };
+    document.getElementById("payload").value = JSON.stringify(payload);
+
+    var sink = document.getElementById("sink");
+    var finished = false;
+    function finish(){
+      if (finished) return;
+      finished = true;
+      state.step = "done";
+      render();
+      window.scrollTo(0,0);
+    }
+    sink.onload = finish;
+    setTimeout(finish, 12000);
+    document.getElementById("poster").submit();
+  }
+
+  /* ---------------- router ---------------- */
+
+  function render(){
+    if (state.step==="intro") renderIntro();
+    else if (state.step==="song") renderSong();
+    else if (state.step==="contact") renderContact();
+    else renderDone();
+    postHeight();
+  }
+
+  window.addEventListener("resize", postHeight);
+  render();
+  setInterval(postHeight, 1000);
+})();
+</script>
+</body>
+</html>
