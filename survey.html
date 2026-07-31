@@ -56,6 +56,10 @@
   input[type=text],input[type=email]{width:100%;padding:12px;background:var(--ink);border:1px solid var(--rule);
     color:var(--bone);font-family:var(--mono);font-size:14px;border-radius:3px;margin-bottom:12px}
   input::placeholder{color:var(--muted)}
+  .codebox{border:1px solid var(--rule);border-radius:4px;padding:20px 18px;max-width:380px;margin:0 auto}
+  .codelabel{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted)}
+  .code{font-family:var(--mono);font-size:26px;letter-spacing:.14em;color:var(--red);margin:10px 0 10px;font-weight:700}
+  .codefine{font-family:var(--serif);font-size:13px;line-height:1.5;color:var(--muted)}
   .foot{font-family:var(--mono);font-size:10px;color:var(--rule);text-align:center;margin-top:18px;letter-spacing:.14em}
   button:focus-visible,input:focus-visible,audio:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
@@ -233,11 +237,17 @@
 
   function renderDone(){
     app.innerHTML =
-      '<div style="text-align:center;padding:26px 0">' +
+      '<div style="text-align:center;padding:20px 0 4px">' +
         '<div class="eyebrow brass">Recorded</div>' +
         '<h2 style="margin-top:16px">Thanks for the fifteen minutes.</h2>' +
-        '<p style="max-width:380px;margin:0 auto">Your scores are in. The write-up goes out with whatever the ' +
-        'data actually says, wins beside losses.</p>' +
+        '<p style="max-width:400px;margin:0 auto 26px">Your scores are in. The write-up goes out with whatever ' +
+        'the data actually says, wins beside losses.</p>' +
+        '<div class="codebox">' +
+          '<div class="codelabel">$25 OFF YOUR NEXT MASTER</div>' +
+          '<div class="code">MASTER25</div>' +
+          '<div class="codefine">Use at checkout on any mastering service at jgbeatslab.com. ' +
+          'One per customer.</div>' +
+        '</div>' +
       '</div>';
   }
 
